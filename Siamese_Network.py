@@ -642,8 +642,7 @@ def train_model_with_validation(input_shape,
 #------------------------------------------------------------------------------
 
 def build_CNN(input_shape):
-    '''Build a CNN model to be used as a shared network in the siamese network model.
-    Mainly copied from the CNN practical during week 8.
+    '''Build a CNN model to be used as a shared network in the siamese network model.    
     Parameters:
         input_shape: The dimenstions of the dataset to be used
     Returns:
