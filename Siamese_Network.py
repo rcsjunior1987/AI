@@ -3,6 +3,7 @@
 Created on Thu Oct  1 19:23:07 2019
 
 @author: Roberto Carlos da Silva Junior 10374647
+@author: Roberto Carlos da Silva Junior n10374647
 """
 
 # Imports modules to complete the Assignment
