@@ -1,0 +1,6 @@
+D:\Documents\GitHub\rcsjunior1987\Object-Oriented-Design\TicTacToe_NineMensMorrisAkaMills\obj\Debug\TicTacToe_NineMensMorrisAkaMills.csprojAssemblyReference.cache
+D:\Documents\GitHub\rcsjunior1987\Object-Oriented-Design\TicTacToe_NineMensMorrisAkaMills\bin\Debug\TicTacToe_NineMensMorrisAkaMills.exe.config
+D:\Documents\GitHub\rcsjunior1987\Object-Oriented-Design\TicTacToe_NineMensMorrisAkaMills\bin\Debug\TicTacToe_NineMensMorrisAkaMills.exe
+D:\Documents\GitHub\rcsjunior1987\Object-Oriented-Design\TicTacToe_NineMensMorrisAkaMills\bin\Debug\TicTacToe_NineMensMorrisAkaMills.pdb
+D:\Documents\GitHub\rcsjunior1987\Object-Oriented-Design\TicTacToe_NineMensMorrisAkaMills\obj\Debug\TicTacToe_NineMensMorrisAkaMills.exe
+D:\Documents\GitHub\rcsjunior1987\Object-Oriented-Design\TicTacToe_NineMensMorrisAkaMills\obj\Debug\TicTacToe_NineMensMorrisAkaMills.pdb
