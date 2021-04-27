@@ -3,21 +3,30 @@ SELECT member.id
      , member.date_of_birth
      , member.first_name
      , member.last_name
-     , price_zone_code
-  FROM SNOW_csm_consumer_user csm_user 
-  INNER JOIN HH_member member ON member.membership_number = csm_user.u_ndis_number
- WHERE csm_user.u_stage = 'li_managed'
+     , member.price_zone_code
+     , csm.u_disabilities
+     , csm.u_gender
+     , region.SA1
+     , region.SA2
+     , region.SA3
+     , region.SA4
+  FROM SNOW_csm_consumer_user csm
+  
+  INNER JOIN HH_member member
+          ON member.membership_number = csm.u_ndis_number
+          
+  INNER JOIN libe_leapinprod_person person
+          ON person.id = csm.u_leapin_id
+          
+INNER JOIN libe_leapinprod_memberregion region
+        ON region.MemberId = member.id
+          
+ WHERE csm.u_stage = 'li_managed'
  
 	AND member.id IN (SELECT DISTINCT invoice.member_id
 						FROM HH_invoice invoice
           
-						INNER JOIN HH_provider_account provider_account
-								ON provider_account.id = invoice.provider_account_id
-          
-						INNER JOIN HH_provider provider
-							    ON provider.id = provider_account.provider_id
-          
-						LEFT JOIN HH_claim claim								
+						INNER JOIN HH_claim claim								
 							   ON claim.invoice_id = invoice.id
          
 					   WHERE YEAR(invoice.created_at) = 2021
@@ -28,4 +37,3 @@ SELECT member.id
   ORDER BY member.first_name
          , member.last_name
          , member.date_of_birth
- 

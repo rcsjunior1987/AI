@@ -26,15 +26,9 @@ SELECT invoice.member_id
      , level1.id
      , level1.name
      , level1.code level1_code
-     , provider.provider_name
+     , invoice.provider_account_id
   FROM HH_invoice invoice
-          
-  INNER JOIN HH_provider_account provider_account
-		  ON provider_account.id = invoice.provider_account_id
-          
-  INNER JOIN HH_provider provider
-          ON provider.id = provider_account.provider_id
-          
+                   
    LEFT JOIN HH_claim claim
 			JOIN HH_item_category_level3 level3
 			  ON level3.id = claim.item_category_level3_id
