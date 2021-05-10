@@ -1,10 +1,11 @@
 SELECT invoices.member_id
-     , invoices.invoice_total
      , invoices.state invoice_state
+     , invoices.updated_at     
+     , (invoiced_units * invoiced_unit_price) invoiced_amount
      , claim.invoice_id
      , claim.id claim_id
      , claim.start_date claim_start_date
-     , claim.end_date claim_end_date
+     , claim.end_date claim_end_date     
      , claim.state claim_state
      , claim.funded_amount claim_funded_amount
      , claim.claimed_units
