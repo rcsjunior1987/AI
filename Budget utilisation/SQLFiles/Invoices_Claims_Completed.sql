@@ -1,6 +1,8 @@
 SELECT invoices.member_id
      , invoices.state invoice_state
-     , invoices.updated_at     
+     , invoices.updated_at    
+     , invoices.invoice_date
+     , invoices.submitted_date
      , (invoiced_units * invoiced_unit_price) invoiced_amount
      , claim.invoice_id
      , claim.id claim_id
@@ -19,11 +21,11 @@ SELECT invoices.member_id
 					, invoice.member_id
 					, invoice.invoice_number
 					, invoice.invoice_date
+                    , invoice.submitted_date
 				    , invoice.invoice_total
 					, invoice.state invoice_state
 					, invoice.funded_total
-				    , invoice.is_reimbursement
-					, invoice.submitted_date
+				    , invoice.is_reimbursement					
 					, invoice.approved_date
 					, invoice.received_date
 				    , invoice.updated_at invoice_updated_at
@@ -55,7 +57,6 @@ SELECT invoices.member_id
           
   INNER JOIN HH_item_category_level1 level1
           ON level1.id = level2.item_category_level1_id
-		
     
 
    
