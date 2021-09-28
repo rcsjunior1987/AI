@@ -46,7 +46,7 @@ class Functions(metaclass=Singleton):
 #----------------------------------------------------------
 
     def print_balanded_models_scores(X, y):
-        Analytics.print_balanded_models(Analytics, X, y)
+        Analytics.print_balanded_models_scores(Analytics, X, y)
 
 #----------------------------------------------------------
 

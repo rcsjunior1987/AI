@@ -128,7 +128,7 @@ class Analytics(Model):
                 # Update model_scores_dict with average_score for model_name
                 model_scores_dict[metric_name].append(average_score)
 
-        model_score_df = pd.DataFrame(model_scores_dict).set_index("Model_name")
+        df_model_score = pd.DataFrame(model_scores_dict)
 
         ##---------
 
@@ -163,11 +163,9 @@ class Analytics(Model):
 
         ##---------
 
-        model_score_df = pd.DataFrame(model_scores_dict).set_index("Model_name")
+        df_model_score = pd.DataFrame(model_scores_dict)
 
-        model_score_df = model_score_df.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ascending=False)
-
-        return model_score_df
+        return df_model_score.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)
 
 #----------------------------------------------------------
 
@@ -176,8 +174,10 @@ class Analytics(Model):
 
 #----------------------------------------------------------
 
-    def print_balanded_models(self, X, y):
+    def __get_balanded_scores(self, X, y):
         models = [RandomOverSampler, BorderlineSMOTE, ClusterCentroids, OneSidedSelection, ADASYN, SMOTE, SMOTEENN, SMOTETomek]
+
+        df_results = pd.DataFrame()
 
         for model in models:
             x_res, y_res = model().fit_resample(X, y)
@@ -186,9 +186,24 @@ class Analytics(Model):
 
             models_scores = self.__get_models_scores(self, X_train, y_train, X_test, y_test)
 
-            best_model = models_scores.iloc[:1]
+            best_model = models_scores.head(1)
 
-            print("---------------------------------------------")
-            #print(model)
-            print(best_model)
-            #print('Resampled dataset shape {}'.format(Counter(y_res)))
+            model_scores_dict = {
+                             'Balancing_Model_name' : []
+                           , 'Shape' : []
+                            }
+
+            model_scores_dict['Balancing_Model_name'].append(model.__name__)
+            model_scores_dict['Shape'].append('{}'.format(Counter(y_res)))
+
+            df_model_score = pd.DataFrame(model_scores_dict)
+
+            df_model_score = pd.concat([df_model_score, best_model], axis=1)
+            df_results = pd.concat([df_results, df_model_score], axis=0)
+
+        return df_results.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)
+
+#----------------------------------------------------------
+
+    def print_balanded_models_scores(self, X, y):
+        print(self.__get_balanded_scores(self, X, y))
