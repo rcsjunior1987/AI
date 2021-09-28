@@ -170,7 +170,7 @@ class Analytics(Model):
 #----------------------------------------------------------
 
     def print_models_scores(self, X_train, y_train, X_test, y_test):
-        print(self.__get_models_scores(self, X_train, y_train, X_test, y_test))
+        print(self.__get_models_scores(self, X_train, y_train, X_test, y_test), end='')
 
 #----------------------------------------------------------
 
@@ -206,4 +206,4 @@ class Analytics(Model):
 #----------------------------------------------------------
 
     def print_balanded_models_scores(self, X, y):
-        print(self.__get_balanded_scores(self, X, y))
+        print(self.__get_balanded_scores(self, X, y), end='')
