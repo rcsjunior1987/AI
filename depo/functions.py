@@ -6,6 +6,8 @@ from .packages.data.data_frame import Data_Frame as data_frame
 from .packages.graphs.missing_no_graphs import Missing_no_graphs
 from .packages.models.analytics import Analytics
 
+from .packages.linguistics.nlp import NLP
+
 from .packages.metaclasses.singleton import Singleton
 
 import os

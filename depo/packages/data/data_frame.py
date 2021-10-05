@@ -3,6 +3,7 @@ from pandas.core.base import PandasObject
 from ..messages.error import Error as errorMessage
 
 from .frame import Frame
+import re
 
 class Data_Frame(Frame):
 
@@ -99,11 +100,6 @@ class Data_Frame(Frame):
         mis_columns = mis_columns.sort_values(
         'Missing Values', ascending=False).round(2)
 
-        # Print some summary information
-        print ("The selected dataframe has " + str(self.shape[1]) + " columns.\n"      
-            "   There are " + str(mis_columns.shape[0]) +
-              " columns that have missing values.")
-
         #----------------------------
 
         # Total missing values
@@ -157,3 +153,24 @@ class Data_Frame(Frame):
 
     def check_balancing(self):
         pass
+
+#----------------------------------------------------------
+
+    def __remove_special_characters(self, convert_into = 'lower'):
+        text = []
+
+        # From all items in the dataSet
+        for i in range(0, self.shape[0]):
+            new_characters = re.sub(pattern='[^a-zA-Z]', repl= ' ', string = str(self)[i])
+
+            if convert_into.upper() == 'lower'.upper():
+                new_characters = new_characters.lower()
+            else:
+                if convert_into.upper() == 'upper'.upper():
+                    new_characters = new_characters.upper()
+
+            # Insert in the vector
+            text.append(new_characters)    
+        return text
+
+    PandasObject.remove_special_characters = __remove_special_characters
