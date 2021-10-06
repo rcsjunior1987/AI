@@ -19,7 +19,7 @@ from sklearn.neural_network import MLPClassifier
 import xgboost as xgb
 
 from sklearn.model_selection import KFold, cross_val_score, train_test_split, GridSearchCV, cross_validate
-from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
+from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 from ...multiscorer_master.multiscorer import MultiScorer
 
 from sklearn.decomposition import PCA
@@ -113,7 +113,7 @@ class Analytics(Model):
 
         # For each model name and model in models
         for model_name, model in models: 
-    
+
             # Add model_name to model_scores_dict 
             model_scores_dict['Model_name'].append(model_name)
             
@@ -135,34 +135,28 @@ class Analytics(Model):
         parameter = {
                     'max_depth':range(3,10,2)
                   , 'min_child_weight':range(1,5,2)
+        
                     }
 
-        p_grid_search = GridSearchCV(estimator = xgb.XGBClassifier(eval_metric='mlogloss')
+        grid_search = GridSearchCV(estimator = xgb.XGBClassifier(eval_metric='mlogloss')
                                    , param_grid = parameter
-                                   , scoring='accuracy'
+                                   , scoring=scorer
                                    , n_jobs=-1
                                    , cv=2
                                     )
 
-        p_grid_search.fit(X_train, y_train)
+        grid_search.fit(X_train, y_train)
 
-        refined_xgb_model = xgb.XGBClassifier(eval_metric='logloss'
-                                            , max_depth=list(p_grid_search.best_params_.values())[0]-1
-                                            , min_child_weight=list(p_grid_search.best_params_.values())[-1]+4
-                                             ).fit(X_train, y_train)
+        cv_result = scorer.get_results()
+        model_scores_dict['Model_name'].append("xgb.XGBClassifier W/ hyperparameters")    
 
-        ref_xgb_pred_y = refined_xgb_model.predict(X_test)
-
-        ##---------
-
-        model_scores_dict['Model_name'].append("xgb.XGBClassifier W/ hyperparameters")
-        model_scores_dict['Accuracy'].append(accuracy_score(y_test, ref_xgb_pred_y))
-        model_scores_dict['F1_score'].append(f1_score(y_test, ref_xgb_pred_y))
-        model_scores_dict['Recall'].append(recall_score(y_test, ref_xgb_pred_y))
-        model_scores_dict['Precision'].append(precision_score(y_test, ref_xgb_pred_y))
-
-        ##---------
-
+        # For each metric in cv_result.keys()
+        for metric_name in cv_result.keys():
+            # Get the average of cv_result[metric_name]
+            average_score = np.average(cv_result[metric_name])
+            # Update model_scores_dict with average_score for model_name
+            model_scores_dict[metric_name].append(average_score)
+        
         df_model_score = pd.DataFrame(model_scores_dict)
 
         return df_model_score.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)

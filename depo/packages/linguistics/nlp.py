@@ -1,5 +1,6 @@
 from pandas.core.base import PandasObject
 from ..messages.error import Error as errorMessage
+from sklearn.feature_extraction.text import CountVectorizer
 
 from .linguistic import Linguistic
 
@@ -108,3 +109,10 @@ class NLP(Linguistic):
         return corpus
 
     PandasObject.get_stemme_text = __get_stemme_text
+
+    def __get_bag_of_words(self, max_features, ngram_range):
+        #corpus = self.__get_stemme_text()
+        cv = CountVectorizer(max_features=max_features, ngram_range=ngram_range)
+        return cv.fit_transform(self).toarray()
+
+    PandasObject.get_bag_of_words = __get_bag_of_words
