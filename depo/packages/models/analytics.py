@@ -14,7 +14,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import GaussianNB, MultinomialNB
 from sklearn.neural_network import MLPClassifier
 import xgboost as xgb
 
@@ -77,7 +77,7 @@ class Analytics(Model):
 
 #----------------------------------------------------------    
 
-    def __get_models_scores(self, X_train, y_train, X_test, y_test):
+    def __get_models_scores(self, X, y):
         
         # Creates an array of models
         models = []
@@ -91,6 +91,7 @@ class Analytics(Model):
         models.append(("AdaBoostClassifier", AdaBoostClassifier()))
         models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
         models.append(("NaiveBayesGaussian", GaussianNB()))
+        models.append(("NaiveBayesMultinomialNB", MultinomialNB()))
         models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
         models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
 
@@ -111,60 +112,41 @@ class Analytics(Model):
                            , 'Precision'  : []
                             }
 
+        kfold = KFold(n_splits=10
+                    , random_state=24
+                    , shuffle=True)
+
         # For each model name and model in models
         for model_name, model in models: 
 
             # Add model_name to model_scores_dict 
             model_scores_dict['Model_name'].append(model_name)
             
-            kfold = KFold(n_splits=2, random_state=24, shuffle=True)
-            _ = cross_val_score(model, X_train, y_train, cv = kfold, scoring = scorer)
+            _ = cross_val_score(model
+                              , X
+                              , y
+                              , cv = kfold
+                              , scoring = scorer
+                               )
+
             cv_result = scorer.get_results()
 
             # For each metric in cv_result.keys()
             for metric_name in cv_result.keys():
                 # Get the average of cv_result[metric_name]
-                average_score = np.average(cv_result[metric_name])
+                average_score = round(np.average(cv_result[metric_name]) * 100 , 2)
+
                 # Update model_scores_dict with average_score for model_name
                 model_scores_dict[metric_name].append(average_score)
 
-        df_model_score = pd.DataFrame(model_scores_dict)
-
-        ##---------
-
-        parameter = {
-                    'max_depth':range(3,10,2)
-                  , 'min_child_weight':range(1,5,2)
-        
-                    }
-
-        grid_search = GridSearchCV(estimator = xgb.XGBClassifier(eval_metric='mlogloss')
-                                   , param_grid = parameter
-                                   , scoring=scorer
-                                   , n_jobs=-1
-                                   , cv=2
-                                    )
-
-        grid_search.fit(X_train, y_train)
-
-        cv_result = scorer.get_results()
-        model_scores_dict['Model_name'].append("xgb.XGBClassifier W/ hyperparameters")    
-
-        # For each metric in cv_result.keys()
-        for metric_name in cv_result.keys():
-            # Get the average of cv_result[metric_name]
-            average_score = np.average(cv_result[metric_name])
-            # Update model_scores_dict with average_score for model_name
-            model_scores_dict[metric_name].append(average_score)
-        
         df_model_score = pd.DataFrame(model_scores_dict)
 
         return df_model_score.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)
 
 #----------------------------------------------------------
 
-    def print_models_scores(self, X_train, y_train, X_test, y_test):
-        print(self.__get_models_scores(self, X_train, y_train, X_test, y_test), end='')
+    def print_models_scores(self, X_train, y_train):
+        print(self.__get_models_scores(self, X_train, y_train), end='')
 
 #----------------------------------------------------------
 
@@ -174,25 +156,26 @@ class Analytics(Model):
         df_results = pd.DataFrame()
 
         for model in models:
+
             x_res, y_res = model().fit_resample(X, y)
 
-            X_train, X_test, y_train, y_test = train_test_split(x_res, y_res, test_size=0.2, random_state=None, shuffle=True)
-
-            models_scores = self.__get_models_scores(self, X_train, y_train, X_test, y_test)
+            models_scores = self.__get_models_scores(self, X, y)
 
             best_model = models_scores.head(1)
 
             model_scores_dict = {
-                             'Balancing_Model_name' : []
-                           , 'Shape' : []
-                            }
+                                'Balancing_Model_name' : []
+                              , 'Shape' : []
+                                }
 
             model_scores_dict['Balancing_Model_name'].append(model.__name__)
+
             model_scores_dict['Shape'].append('{}'.format(Counter(y_res)))
 
             df_model_score = pd.DataFrame(model_scores_dict)
 
             df_model_score = pd.concat([df_model_score, best_model], axis=1)
+
             df_results = pd.concat([df_results, df_model_score], axis=0)
 
         return df_results.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)

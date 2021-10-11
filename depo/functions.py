@@ -42,8 +42,8 @@ class Functions(metaclass=Singleton):
 
 #----------------------------------------------------------
 
-    def print_models_scores(X_train, y_train, X_test, y_test):
-        Analytics.print_models_scores(Analytics, X_train, y_train, X_test, y_test)
+    def print_models_scores(X_train, y_train):
+        Analytics.print_models_scores(Analytics, X_train, y_train)
 
 #----------------------------------------------------------
 

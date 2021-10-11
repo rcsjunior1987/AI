@@ -90,6 +90,7 @@ class NLP(Linguistic):
 
             #dialog = re.sub(pattern='[^a-zA-Z]', repl=' ', string=str(self)[i])
             dialog = re.sub(pattern='[^a-zA-Z]', repl=' ', string=self[i])
+
             dialog = dialog.lower()
 
             # Tokenizing the dialog/script by words
