@@ -11,15 +11,6 @@ nltk.download('stopwords')
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 
-def get_token(words):
-    return words.split()
-
-def get_remove_stop_words(words):
-    return [word for word in words if word not in set(stopwords.words('english'))]
-
-def get_stemme_words(words):
-    return [PorterStemmer().stem(word) for word in words]
-
 class NLP(Linguistic):
 
     def _get_file_handled(self):
@@ -50,9 +41,8 @@ class NLP(Linguistic):
 
 #----------------------------------------------------------
 
-    #def __get_token(self, words):
-    #    print('__get_token')
-    #    return words.split()
+    def __get_token(self, words):
+        return words.split()
 
 #----------------------------------------------------------
 
@@ -64,8 +54,8 @@ class NLP(Linguistic):
 
 #----------------------------------------------------------
 
-    #def __get_remove_stop_words(self, words):
-    #    return [word for word in words if word not in set(stopwords.words('english'))]
+    def __get_remove_stop_words(self, words):
+        return [word for word in words if word not in set(stopwords.words('english'))]
 
 #----------------------------------------------------------
 
@@ -77,8 +67,8 @@ class NLP(Linguistic):
 
 #----------------------------------------------------------
 
-    #def __get_stemme_words(self, words):
-    #    return [PorterStemmer().stem(word) for word in words]
+    def __get_stemme_words(self, words):
+        return [PorterStemmer().stem(word) for word in words]
 
 #----------------------------------------------------------
 
@@ -88,19 +78,18 @@ class NLP(Linguistic):
 
         for i in range(0, self.shape[0]):
 
-            #dialog = re.sub(pattern='[^a-zA-Z]', repl=' ', string=str(self)[i])
             dialog = re.sub(pattern='[^a-zA-Z]', repl=' ', string=self[i])
 
             dialog = dialog.lower()
 
             # Tokenizing the dialog/script by words
-            tokens = get_token(dialog)
+            tokens = NLP.__get_token(NLP, dialog)
 
             # Removing the stop words
-            dialog_words  = get_remove_stop_words(tokens)
+            dialog_words  = NLP.__get_remove_stop_words(NLP, tokens)
 
             # Stemming the words
-            words = get_stemme_words(dialog_words)
+            words = NLP.__get_stemme_words(NLP, dialog_words)
 
             dialog = ' '.join(words)
 
@@ -111,8 +100,9 @@ class NLP(Linguistic):
 
     PandasObject.get_stemme_text = __get_stemme_text
 
+#----------------------------------------------------------
+
     def __get_bag_of_words(self, max_features, ngram_range):
-        #corpus = self.__get_stemme_text()
         cv = CountVectorizer(max_features=max_features, ngram_range=ngram_range)
         return cv.fit_transform(self).toarray()
 

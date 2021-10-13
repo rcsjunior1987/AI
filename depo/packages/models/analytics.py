@@ -5,18 +5,22 @@ import numpy as np
 
 from sklearn.cluster import KMeans
 from yellowbrick.cluster.elbow import kelbow_visualizer
-from sklearn.dummy import DummyClassifier
-from sklearn.linear_model import LinearRegression, LogisticRegression
-from lightgbm import LGBMClassifier
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import GradientBoostingClassifier
-from sklearn.naive_bayes import GaussianNB, MultinomialNB
-from sklearn.neural_network import MLPClassifier
-import xgboost as xgb
+
+#from sklearn.dummy import DummyClassifier
+#from sklearn.linear_model import LinearRegression, LogisticRegression
+#from lightgbm import LGBMClassifier
+#from sklearn.neighbors import KNeighborsClassifier
+#from sklearn.tree import DecisionTreeClassifier
+#from sklearn.tree import DecisionTreeClassifier
+#from sklearn.ensemble import RandomForestClassifier
+#from sklearn.ensemble import AdaBoostClassifier
+#from sklearn.ensemble import GradientBoostingClassifier
+#from sklearn.naive_bayes import GaussianNB, MultinomialNB
+#from sklearn.neural_network import MLPClassifier
+#import xgboost as xgb
+
+import lazypredict
+from lazypredict.Supervised import Classification, LazyClassifier, LazyRegressor, Regression
 
 from sklearn.model_selection import KFold, cross_val_score, train_test_split, GridSearchCV, cross_validate
 from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
@@ -36,12 +40,14 @@ models = [RandomOverSampler, BorderlineSMOTE, ClusterCentroids, OneSidedSelectio
 
 class Analytics(Model):
 
-    def __init__(self):
-        pass
+    #def __init__(self):
+    #    pass
 
-    def __print_elbow(self, k):
-        visualizer = kelbow_visualizer(KMeans(), self, k)
-        visualizer.show()
+    def __print_elbow(self, k, visualizer=None):
+        self.k = k
+
+        self.visualizer = kelbow_visualizer(KMeans(), self, self.k)
+        self.visualizer.show()
 
     PandasObject.print_elbow = __print_elbow
 
@@ -77,76 +83,27 @@ class Analytics(Model):
 
 #----------------------------------------------------------    
 
-    def __get_models_scores(self, X, y):
-        
-        # Creates an array of models
-        models = []
-        models.append(("DummyClassifier_most_frequent", DummyClassifier(strategy='most_frequent', random_state=0)))
-        models.append(("LinearRegression", LinearRegression()))
-        models.append(("LogisticRegression", LogisticRegression(solver = 'lbfgs', max_iter=1000)))
-        models.append(("LGBMClassifier", LGBMClassifier()))       
-        models.append(("KNeighborsClassifier", KNeighborsClassifier(3)))
-        models.append(("DecisionTreeClassifier", DecisionTreeClassifier()))
-        models.append(("RandomForestClassifier", RandomForestClassifier()))
-        models.append(("AdaBoostClassifier", AdaBoostClassifier()))
-        models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
-        models.append(("NaiveBayesGaussian", GaussianNB()))
-        models.append(("NaiveBayesMultinomialNB", MultinomialNB()))
-        models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
-        models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
+    def get_models_scores(self, X_train, X_test, y_train, y_test, type=0):
+      
+        """
+            type 0 = Classification
+            type 1 = Regression
 
-#-------------------------------------
+        """
 
-        # Measuring the metrics of the different models
-        scorer = MultiScorer({'Accuracy'  : (accuracy_score , {})
-                            , 'F1_score'  : (f1_score       , {'pos_label': 3, 'average':'macro'})
-                            , 'Recall'    : (recall_score   , {'pos_label': 3, 'average':'macro'})
-                            , 'Precision' : (precision_score, {'pos_label': 3, 'average':'macro'})
-                            })
+        if (type == 1):
+            reg = LazyRegressor(verbose=0, ignore_warnings=True, custom_metric=None)
+            models, predictions = reg.fit(X_train, X_test, y_train, y_test)
+        else:
+            clf = LazyClassifier(verbose=0, ignore_warnings=True, custom_metric=None)
+            models, predictions = clf.fit(X_train, X_test, y_train, y_test)
 
-        # A dictionary for all the distinct models and their respective metrics
-        model_scores_dict = {'Model_name' : []
-                           , 'Accuracy'   : []
-                           , 'F1_score'   : []
-                           , 'Recall'     : []
-                           , 'Precision'  : []
-                            }
-
-        kfold = KFold(n_splits=10
-                    , random_state=24
-                    , shuffle=True)
-
-        # For each model name and model in models
-        for model_name, model in models: 
-
-            # Add model_name to model_scores_dict 
-            model_scores_dict['Model_name'].append(model_name)
-            
-            _ = cross_val_score(model
-                              , X
-                              , y
-                              , cv = kfold
-                              , scoring = scorer
-                               )
-
-            cv_result = scorer.get_results()
-
-            # For each metric in cv_result.keys()
-            for metric_name in cv_result.keys():
-                # Get the average of cv_result[metric_name]
-                average_score = round(np.average(cv_result[metric_name]) * 100 , 2)
-
-                # Update model_scores_dict with average_score for model_name
-                model_scores_dict[metric_name].append(average_score)
-
-        df_model_score = pd.DataFrame(model_scores_dict)
-
-        return df_model_score.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)
+        return models
 
 #----------------------------------------------------------
 
-    def print_models_scores(self, X_train, y_train):
-        print(self.__get_models_scores(self, X_train, y_train), end='')
+    def print_models_scores(self, X_train, X_test, y_train, y_test, type=0):
+        print(self.get_models_scores(self, X_train, X_test, y_train, y_test, type))
 
 #----------------------------------------------------------
 
@@ -184,3 +141,44 @@ class Analytics(Model):
 
     def print_balanded_models_scores(self, X, y):
         print(self.__get_balanded_scores(self, X, y), end='')
+
+#----------------------------------------------------------
+"""
+    def __get_models():        
+        models = []
+        models.append(("DummyClassifier_most_frequent", DummyClassifier(strategy='most_frequent', random_state=0)))
+        models.append(("LinearRegression", LinearRegression()))
+        models.append(("LogisticRegression", LogisticRegression()))
+        models.append(("LGBMClassifier", LGBMClassifier()))       
+        models.append(("KNeighborsClassifier", KNeighborsClassifier(3)))
+        models.append(("DecisionTreeClassifier", DecisionTreeClassifier()))
+        models.append(("RandomForestClassifier", RandomForestClassifier()))
+        models.append(("AdaBoostClassifier", AdaBoostClassifier()))
+        models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
+        models.append(("NaiveBayesGaussian", GaussianNB()))
+        models.append(("NaiveBayesMultinomialNB", MultinomialNB()))
+        models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
+        models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
+        return models
+
+#----------------------------------------------------------
+
+    def __get_metrics():
+        # Measuring the metrics of the different models
+        scorer = MultiScorer({'Accuracy'  : (accuracy_score , {})
+                            , 'F1_score'  : (f1_score       , {'pos_label': 3, 'average':'macro'})
+                            , 'Recall'    : (recall_score   , {'pos_label': 3, 'average':'macro'})
+                            , 'Precision' : (precision_score, {'pos_label': 3, 'average':'macro'})
+                            })
+        return scorer
+
+#----------------------------------------------------------
+    def __get_models_scores():
+        model_scores_dict = {'Model_name' : []
+                           , 'Accuracy'   : []
+                           , 'F1_score'   : []
+                           , 'Recall'     : []
+                           , 'Precision'  : []
+                            }
+        return model_scores_dict
+"""        
