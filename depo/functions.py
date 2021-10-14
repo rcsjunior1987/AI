@@ -50,6 +50,12 @@ class Functions(metaclass=Singleton):
     def print_balanded_models_scores(X, y):
         Analytics.print_balanded_models_scores(Analytics, X, y)
 
+
+#----------------------------------------------------------
+
+    def get_grid_searchCV_scores(models, params,  X, y, cv=3, n_jobs=3, verbose=1, scoring=None, refit=False, sort_by='mean_score'):
+        print(Analytics.get_grid_searchCV_scores(Analytics, models, params,  X, y, cv, n_jobs, verbose, scoring, refit, sort_by))
+
 #----------------------------------------------------------
 
 def _get_file_zip(dir, file_name, url):
@@ -59,6 +65,8 @@ def _get_file_zip(dir, file_name, url):
 
 def _get_file_csv(dir, file_name, url):
     return csv(dir, file_name, url).__open__()
+
+
 
 #----------------------------------------------------------
 

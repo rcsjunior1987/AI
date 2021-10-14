@@ -143,42 +143,84 @@ class Analytics(Model):
         print(self.__get_balanded_scores(self, X, y), end='')
 
 #----------------------------------------------------------
-"""
-    def __get_models():        
-        models = []
-        models.append(("DummyClassifier_most_frequent", DummyClassifier(strategy='most_frequent', random_state=0)))
-        models.append(("LinearRegression", LinearRegression()))
-        models.append(("LogisticRegression", LogisticRegression()))
-        models.append(("LGBMClassifier", LGBMClassifier()))       
-        models.append(("KNeighborsClassifier", KNeighborsClassifier(3)))
-        models.append(("DecisionTreeClassifier", DecisionTreeClassifier()))
-        models.append(("RandomForestClassifier", RandomForestClassifier()))
-        models.append(("AdaBoostClassifier", AdaBoostClassifier()))
-        models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
-        models.append(("NaiveBayesGaussian", GaussianNB()))
-        models.append(("NaiveBayesMultinomialNB", MultinomialNB()))
-        models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
-        models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
-        return models
 
-#----------------------------------------------------------
+    def get_grid_searchCV_scores(self, models, params,  X, y, cv, n_jobs, verbose, scoring, refit, sort_by):
 
-    def __get_metrics():
-        # Measuring the metrics of the different models
-        scorer = MultiScorer({'Accuracy'  : (accuracy_score , {})
-                            , 'F1_score'  : (f1_score       , {'pos_label': 3, 'average':'macro'})
-                            , 'Recall'    : (recall_score   , {'pos_label': 3, 'average':'macro'})
-                            , 'Precision' : (precision_score, {'pos_label': 3, 'average':'macro'})
-                            })
-        return scorer
+        def get_missing_params(params):
+            missing_params = None
 
-#----------------------------------------------------------
-    def __get_models_scores():
-        model_scores_dict = {'Model_name' : []
-                           , 'Accuracy'   : []
-                           , 'F1_score'   : []
-                           , 'Recall'     : []
-                           , 'Precision'  : []
-                            }
-        return model_scores_dict
-"""        
+            if not set(models.keys()).issubset(set(params.keys())):
+                missing_params = list(set(models.keys()) - set(params.keys()))
+
+            return missing_params
+
+        #----------------------------------------------------------
+
+        def fit(X, y, cv, n_jobs, verbose, scoring, refit):
+            for key in keys:
+                #print("Running GridSearchCV for %s." % key)
+                model = models[key]
+                param = params[key]
+
+                gs = GridSearchCV(model
+                                , param
+                                , cv=cv
+                                , n_jobs=n_jobs
+                                , verbose=verbose
+                                , scoring=scoring
+                                , refit=refit
+                                , return_train_score=True)
+                gs.fit(X,y)
+                grid_searches[key] = gs
+
+        #----------------------------------------------------------
+
+        def score_summary(sort_by):
+            def row(key, scores, params):
+                d = {
+                     'estimator': key
+                    , 'min_score': min(scores)
+                    , 'max_score': max(scores)
+                    , 'mean_score': np.mean(scores)
+                    , 'std_score': np.std(scores)
+                }
+                return pd.Series({**params,**d})
+
+            rows = []
+            for k in grid_searches:
+                #print(k)
+                param = grid_searches[k].cv_results_['params']
+                scores = []
+                for i in range(grid_searches[k].cv):
+                    key = "split{}_test_score".format(i)
+                    r = grid_searches[k].cv_results_[key]        
+                    scores.append(r.reshape(len(param),1))
+
+                all_scores = np.hstack(scores)
+                for p, s in zip(param, all_scores):
+                    rows.append((row(k, s, p)))
+
+            df = pd.concat(rows, axis=1).T.sort_values([sort_by], ascending=False)
+
+            columns = ['estimator', 'min_score', 'mean_score', 'max_score', 'std_score']
+            columns = columns + [c for c in df.columns if c not in columns]
+
+            return df[columns]
+
+        missing_params = get_missing_params(params)
+
+        if (missing_params != None):
+            raise ValueError("Some estimators are missing parameters: %s" % missing_params)
+        else:
+            models = models
+            keys = models.keys()
+            grid_searches = {}
+
+            fit(X, y, cv, n_jobs, verbose, scoring, refit)
+            
+            scores = score_summary(sort_by)
+
+            return scores
+
+
+        
