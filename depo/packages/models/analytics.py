@@ -102,6 +102,29 @@ class Analytics(Model):
     
         """
 
+            classification
+            Linear
+            Perceptron
+            RidgeClassifier
+            LGBMClassifier
+            LogisticRegression
+            XGBClassifier
+            NearestCentroid
+            DecisionTreeClassifier
+            BaggingClassifier
+            ExtraTreesClassifier
+            RandomForestClassifier
+            BernoulliNB
+            SGDClassifier
+            SVC
+            GaussianNB
+            ExtraTreeClassifier
+            KNeighborsClassifier
+            AdaBoostClassifier
+            DummyClassifier
+            LabelSpreading
+            LabelPropagation
+
             kfold = KFold(n_splits=10
                     , random_state=24
                     , shuffle=True)
