@@ -99,6 +99,66 @@ class Analytics(Model):
             models, predictions = clf.fit(X_train, X_test, y_train, y_test)
 
         return models
+    
+        """
+
+            kfold = KFold(n_splits=10
+                    , random_state=24
+                    , shuffle=True)
+
+        # For each model name and model in models
+        for model_name, model in models: 
+
+            # Add model_name to model_scores_dict 
+            model_scores_dict['Model_name'].append(model_name)
+            
+            _ = cross_val_score(model
+                              , X
+                              , y
+                              , cv = kfold
+                              , scoring = scorer
+                               )
+
+            cv_result = scorer.get_results()
+
+
+            def __get_models():        
+        models = []
+        models.append(("DummyClassifier_most_frequent", DummyClassifier(strategy='most_frequent', random_state=0)))
+        models.append(("LinearRegression", LinearRegression()))
+        models.append(("LogisticRegression", LogisticRegression()))
+        models.append(("LGBMClassifier", LGBMClassifier()))       
+        models.append(("KNeighborsClassifier", KNeighborsClassifier(3)))
+        models.append(("DecisionTreeClassifier", DecisionTreeClassifier()))
+        models.append(("RandomForestClassifier", RandomForestClassifier()))
+        models.append(("AdaBoostClassifier", AdaBoostClassifier()))
+        models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
+        models.append(("NaiveBayesGaussian", GaussianNB()))
+        models.append(("NaiveBayesMultinomialNB", MultinomialNB()))
+        models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
+        models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
+        return models
+
+        def __get_metrics():
+        # Measuring the metrics of the different models
+        scorer = MultiScorer({'Accuracy'  : (accuracy_score , {})
+                            , 'F1_score'  : (f1_score       , {'pos_label': 3, 'average':'macro'})
+                            , 'Recall'    : (recall_score   , {'pos_label': 3, 'average':'macro'})
+                            , 'Precision' : (precision_score, {'pos_label': 3, 'average':'macro'})
+                            })
+        return scorer
+
+        def __get_models_scores():
+        model_scores_dict = {'Model_name' : []
+                           , 'Accuracy'   : []
+                           , 'F1_score'   : []
+                           , 'Recall'     : []
+                           , 'Precision'  : []
+                            }
+        return model_scores_dict
+        """
+    
+    
 
 #----------------------------------------------------------
 
