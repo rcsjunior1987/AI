@@ -28,7 +28,6 @@ class Functions(metaclass=Singleton):
                     if case("csv"):
                         df._set_file_handled(_get_file_csv(dir, file_name, url))
                         break
-                    print("test")
                     break    
                 break
             while switch(extension_dir):
@@ -42,8 +41,8 @@ class Functions(metaclass=Singleton):
 
 #----------------------------------------------------------
 
-    def print_models_scores(X_train, X_test, y_train, y_test, type=0):
-        Analytics.print_models_scores(Analytics, X_train, X_test, y_train, y_test, type)
+    def print_models_scores(X, y, n_splits):
+        Analytics.print_models_scores(Analytics, X, y, n_splits)
 
 #----------------------------------------------------------
 

@@ -1,3 +1,6 @@
+import warnings
+warnings.filterwarnings("ignore")
+
 from .model import Model
 
 import pandas as pd
@@ -5,31 +8,21 @@ import numpy as np
 
 from sklearn.cluster import KMeans
 from yellowbrick.cluster.elbow import kelbow_visualizer
-
-#from sklearn.dummy import DummyClassifier
-#from sklearn.linear_model import LinearRegression, LogisticRegression
-#from lightgbm import LGBMClassifier
-#from sklearn.neighbors import KNeighborsClassifier
-#from sklearn.tree import DecisionTreeClassifier
-#from sklearn.tree import DecisionTreeClassifier
-#from sklearn.ensemble import RandomForestClassifier
-#from sklearn.ensemble import AdaBoostClassifier
-#from sklearn.ensemble import GradientBoostingClassifier
-#from sklearn.naive_bayes import GaussianNB, MultinomialNB
-#from sklearn.neural_network import MLPClassifier
-#import xgboost as xgb
-
-import lazypredict
-from lazypredict.Supervised import Classification, LazyClassifier, LazyRegressor, Regression
-
+from sklearn.dummy import DummyClassifier
+from sklearn.linear_model import LinearRegression, LogisticRegression, Perceptron, RidgeClassifier, SGDClassifier
+from lightgbm import LGBMClassifier
+from sklearn.neighbors import KNeighborsClassifier, NearestCentroid
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, BaggingClassifier, AdaBoostClassifier, GradientBoostingClassifier, ExtraTreesClassifier
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+from sklearn.neural_network import MLPClassifier
+from sklearn.svm import SVC
+import xgboost as xgb
 from sklearn.model_selection import KFold, cross_val_score, train_test_split, GridSearchCV, cross_validate
 from sklearn.metrics import classification_report, accuracy_score, f1_score, precision_score, recall_score, confusion_matrix
 from ...multiscorer_master.multiscorer import MultiScorer
-
 from sklearn.decomposition import PCA
-
 from pandas.core.base import PandasObject
-
 from imblearn.under_sampling import ClusterCentroids, OneSidedSelection
 from imblearn.over_sampling import SMOTE, BorderlineSMOTE, ADASYN, RandomOverSampler
 from imblearn.combine import SMOTEENN, SMOTETomek
@@ -83,51 +76,72 @@ class Analytics(Model):
 
 #----------------------------------------------------------    
 
-    def get_models_scores(self, X_train, X_test, y_train, y_test, type=0):
-      
-        """
-            type 0 = Classification
-            type 1 = Regression
+    def get_models_scores(self, X, y, n_splits):
 
-        """
+        def __get_models():        
+            models = []
+            #models.append(("DummyClassifierMostFrequentClassifier", DummyClassifier(strategy='most_frequent', random_state=0)))
+            #models.append(("LinearRegression", LinearRegression()))
+            #models.append(("LogisticRegression", LogisticRegression()))
+            #models.append(("LGBMClassifier", LGBMClassifier()))       
+            #models.append(("KNeighborsClassifier", KNeighborsClassifier(3)))
+            #models.append(("DecisionTreeClassifier", DecisionTreeClassifier()))
+            #models.append(("RandomForestClassifier", RandomForestClassifier()))
+            models.append(("AdaBoostClassifier", AdaBoostClassifier()))
+            #models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
+            models.append(("NaiveBayesGaussianClassifier", GaussianNB()))
+            models.append(("NaiveBayesMultinomialNBClassifier", MultinomialNB()))
+            #models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
+            #models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
+            #models.append(("PerceptronClassifier", Perceptron() ))
+            #models.append(("RidgeClassifier", RidgeClassifier()))
+            #models.append(("NearestCentroidClassifier", NearestCentroid()))
+            #models.append(("BaggingClassifier", BaggingClassifier()))
+            #models.append(("ExtraTreesClassifier", ExtraTreesClassifier()))
+            #models.append(("BernoulliNBClassifier", BernoulliNB()))
+            #models.append(("SGDClassifier", SGDClassifier()))
+            #models.append(("SVCRegressionClassifier", SVC()))           
+            return models
 
-        if (type == 1):
-            reg = LazyRegressor(verbose=0, ignore_warnings=True, custom_metric=None)
-            models, predictions = reg.fit(X_train, X_test, y_train, y_test)
-        else:
-            clf = LazyClassifier(verbose=0, ignore_warnings=True, custom_metric=None)
-            models, predictions = clf.fit(X_train, X_test, y_train, y_test)
+        #-------------------------------------
 
-        return models
-    
-        """
+        def __get_models_scores():
+                model_scores_dict = {'Model_name' : []
+                                    , 'Accuracy'   : []
+                                    , 'F1_score'   : []
+                                    , 'Recall'     : []
+                                    , 'Precision'  : []
+                                    }
+                return model_scores_dict
 
-            classification
-            Linear
-            Perceptron
-            RidgeClassifier
-            LGBMClassifier
-            LogisticRegression
-            XGBClassifier
-            NearestCentroid
-            DecisionTreeClassifier
-            BaggingClassifier
-            ExtraTreesClassifier
-            RandomForestClassifier
-            BernoulliNB
-            SGDClassifier
-            SVC
-            GaussianNB
-            ExtraTreeClassifier
-            KNeighborsClassifier
-            AdaBoostClassifier
-            DummyClassifier
-            LabelSpreading
-            LabelPropagation
+        #-------------------------------------
 
-            kfold = KFold(n_splits=10
+        def __get_metrics():
+            
+            # Measuring the metrics of the different models
+            scorer = MultiScorer({'Accuracy'  : (accuracy_score , {})
+                                , 'F1_score'  : (f1_score       , {'pos_label': 3, 'average':'macro'})
+                                , 'Recall'    : (recall_score   , {'pos_label': 3, 'average':'macro'})
+                                , 'Precision' : (precision_score, {'pos_label': 3, 'average':'macro'})
+                                })
+            return scorer
+
+        #-------------------------------------
+
+        # Creates an array of models
+        models = __get_models()
+
+        # Measuring the metrics of the different models
+        scorer = __get_metrics()
+
+        # A dictionary for all the distinct models and their respective metrics
+        model_scores_dict = __get_models_scores()
+
+        kfold = KFold(n_splits=n_splits
                     , random_state=24
                     , shuffle=True)
+
+        #-------------------------------------
 
         # For each model name and model in models
         for model_name, model in models: 
@@ -144,49 +158,21 @@ class Analytics(Model):
 
             cv_result = scorer.get_results()
 
+            # For each metric in cv_result.keys()
+            for metric_name in cv_result.keys():
+                # Get the average of cv_result[metric_name]
+                average_score = np.average(cv_result[metric_name])
+                # Update model_scores_dict with average_score for model_name
+                model_scores_dict[metric_name].append(average_score)
 
-            def __get_models():        
-        models = []
-        models.append(("DummyClassifier_most_frequent", DummyClassifier(strategy='most_frequent', random_state=0)))
-        models.append(("LinearRegression", LinearRegression()))
-        models.append(("LogisticRegression", LogisticRegression()))
-        models.append(("LGBMClassifier", LGBMClassifier()))       
-        models.append(("KNeighborsClassifier", KNeighborsClassifier(3)))
-        models.append(("DecisionTreeClassifier", DecisionTreeClassifier()))
-        models.append(("RandomForestClassifier", RandomForestClassifier()))
-        models.append(("AdaBoostClassifier", AdaBoostClassifier()))
-        models.append(("GradientBoostingClassifier", GradientBoostingClassifier()))
-        models.append(("NaiveBayesGaussian", GaussianNB()))
-        models.append(("NaiveBayesMultinomialNB", MultinomialNB()))
-        models.append(("MultiLayerPerceptronClassifier", MLPClassifier()))
-        models.append(("XGBClassifier", xgb.XGBClassifier(eval_metric='mlogloss')))
-        return models
+            df_model_score = pd.DataFrame(model_scores_dict)
 
-        def __get_metrics():
-        # Measuring the metrics of the different models
-        scorer = MultiScorer({'Accuracy'  : (accuracy_score , {})
-                            , 'F1_score'  : (f1_score       , {'pos_label': 3, 'average':'macro'})
-                            , 'Recall'    : (recall_score   , {'pos_label': 3, 'average':'macro'})
-                            , 'Precision' : (precision_score, {'pos_label': 3, 'average':'macro'})
-                            })
-        return scorer
-
-        def __get_models_scores():
-        model_scores_dict = {'Model_name' : []
-                           , 'Accuracy'   : []
-                           , 'F1_score'   : []
-                           , 'Recall'     : []
-                           , 'Precision'  : []
-                            }
-        return model_scores_dict
-        """
-    
-    
+        return df_model_score.sort_values(by=["Accuracy", "F1_score", "Recall", "Precision"], ignore_index=True, ascending=False)
 
 #----------------------------------------------------------
 
-    def print_models_scores(self, X_train, X_test, y_train, y_test, type=0):
-        print(self.get_models_scores(self, X_train, X_test, y_train, y_test, type))
+    def print_models_scores(self, X, y, n_splits):
+        print(self.get_models_scores(self, X, y, n_splits))
 
 #----------------------------------------------------------
 
@@ -241,7 +227,6 @@ class Analytics(Model):
 
         def fit(X, y, cv, n_jobs, verbose, scoring, refit):
             for key in keys:
-                #print("Running GridSearchCV for %s." % key)
                 model = models[key]
                 param = params[key]
 
@@ -252,8 +237,8 @@ class Analytics(Model):
                                 , verbose=verbose
                                 , scoring=scoring
                                 , refit=refit
-                                , return_train_score=True)
-                gs.fit(X,y)
+                                , return_train_score=False)
+                gs.fit(X, y)
                 grid_searches[key] = gs
 
         #----------------------------------------------------------
@@ -289,6 +274,8 @@ class Analytics(Model):
             columns = columns + [c for c in df.columns if c not in columns]
 
             return df[columns]
+
+        #----------------------------------------------------------
 
         missing_params = get_missing_params(params)
 
